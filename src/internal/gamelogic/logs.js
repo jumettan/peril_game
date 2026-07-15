@@ -1,0 +1,20 @@
+import { appendFile } from "fs/promises";
+const logsFile = "game.log";
+const writeToDiskSleep = 1000;
+function block(ms) {
+    const end = Date.now() + ms;
+    while (Date.now() < end) { }
+}
+export async function writeLog(gameLog) {
+    console.log("received game log...");
+    block(writeToDiskSleep);
+    const date = new Date(gameLog.currentTime);
+    const timestamp = date.toISOString();
+    const logEntry = `${timestamp} ${gameLog.username}: ${gameLog.message}\n`;
+    try {
+        await appendFile(logsFile, logEntry, { flag: "a" });
+    }
+    catch (err) {
+        throw new Error(`could not write to logs file: ${err}`);
+    }
+}

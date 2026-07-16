@@ -2,14 +2,13 @@ import amqp, { type ConfirmChannel } from "amqplib";
 import { publishJSON, publishMsgPack } from "../internal/pubsub/publish.js";
 import { ArmyMovesPrefix, ExchangePerilDeadLetter, ExchangePerilDirect, ExchangePerilTopic, GameLogSlug, PauseKey, WarRecognitionsPrefix } from "../internal/routing/routing.js";
 import { GameState, type PlayingState } from "../internal/gamelogic/gamestate.js";
-import { clientWelcome, commandStatus, getInput, printClientHelp, printQuit, printServerHelp } from "../internal/gamelogic/gamelogic.js";
+import { clientWelcome, commandStatus, getInput, getMaliciousLog, printClientHelp, printQuit, printServerHelp } from "../internal/gamelogic/gamelogic.js";
 import { declareAndBind, SimpleQueueType } from "../internal/pubsub/consume.js";
 import { commandSpawn } from "../internal/gamelogic/spawn.js";
 import { commandMove } from "../internal/gamelogic/move.js";
 import { subscribeJSON } from "../internal/pubsub/subscribe.js";
 import { handlerMove, handlerPause, handlerWar } from "./handlers.js";
 import type { GameLog } from "../internal/gamelogic/logs.js";
-import { stringify } from "querystring";
 
 async function main() {
   const rabbitConnString = "amqp://guest:guest@localhost:5672/";
@@ -91,7 +90,23 @@ async function main() {
       continue;
     }
     if (command === "spam") {
-      console.log("Spamming not allowed yet!");
+      const value = words[1];
+      if (!value) {
+        console.log("Please provide a number.");
+        continue;
+      }
+
+
+      const count = Number.parseInt(value, 10)
+
+      if (Number.isNaN(count)) {
+        console.log("Please provide a number.");
+        continue;
+      }
+
+      for (let i = 0; i < count; i++) {
+        await publishGameLog(ch, userName, getMaliciousLog());
+      }
       continue;
     }
     if (command === "status") {
@@ -139,6 +154,5 @@ export async function publishGameLog(
     message,
     currentTime: new Date(),
   };
-
   await publishMsgPack(ch, ExchangePerilTopic, `${GameLogSlug}.${username}`, gamelog);
 }

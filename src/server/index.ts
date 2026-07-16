@@ -4,6 +4,7 @@ import { ExchangePerilDeadLetter, ExchangePerilDirect, ExchangePerilTopic, GameL
 import type { PlayingState } from "../internal/gamelogic/gamestate.js";
 import type { GameLog } from "../internal/gamelogic/logs.js";
 import { writeLog } from "../internal/gamelogic/logs.js";
+import { printServerHelp } from "../internal/gamelogic/gamelogic.js";
 import { SimpleQueueType } from "../internal/pubsub/consume.js";
 import { AckType, subscribeMsgPack } from "../internal/pubsub/subscribe.js";
 
@@ -35,6 +36,13 @@ async function main() {
   );
 
   await publishJSON(ch, ExchangePerilDirect, PauseKey, state);
+
+  // Used to run the server from a non-interactive source, like the multiserver.sh file
+  if (!process.stdin.isTTY) {
+    console.log("Non-interactive mode: skipping command input.");
+    return;
+  }
+  printServerHelp();
   console.log("Waiting for interrupt...");
 }
 main().catch((err) => {

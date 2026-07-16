@@ -47,6 +47,7 @@ export async function subscribe<T>(
         simpleQueueType,
         ExchangePerilDeadLetter,
     );
+    await channel.prefetch(10);
     const onMessage = async (msg: ConsumeMessage | null) => {
         if (msg === null) {
             return;
